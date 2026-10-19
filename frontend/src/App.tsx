@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { CATEGORIES, PERSONAS } from './config/loginOptions';
 import EmailDiscoveryPortal, { type OrderMapping } from './EmailDiscoveryPortal';
 import ChatDiscoveryPortal from './ChatDiscoveryPortal';
 import VoiceDiscoveryPortal from './VoiceDiscoveryPortal';
 import DocumentDiscoveryPortal from './DocumentDiscoveryPortal';
 import OrderView from './OrderView';
-import InvoiceModule, { INVOICE_NAV_ITEMS, INVOICE_ROUTE_PATTERN } from './invoices/InvoiceModule';
+import InvoiceModule, { INVOICE_ROUTE_PATTERN } from './invoices/InvoiceModule';
 import InvoiceCreateDialog from './invoices/InvoiceCreateDialog';
 
 type CustomerSession = {
@@ -885,7 +885,6 @@ export default function App() {
   };
 
   const routerNavigate = useNavigate();
-  const location = useLocation();
 
   const [invoiceCreateWorkflow, setInvoiceCreateWorkflow] = useState<OrderMapping | null>(null);
 
@@ -1205,28 +1204,6 @@ export default function App() {
           ))}
         </nav>
 
-        <div className="nav-group" role="group" aria-labelledby="invoice-nav-heading">
-          <span id="invoice-nav-heading" className="nav-group-heading">Invoice Management</span>
-          <nav className="nav nav-sub">
-            {INVOICE_NAV_ITEMS.map((item) => {
-              const isActive = activeView === 'invoices' && (item.path === '/invoices'
-                ? location.pathname === '/invoices' || /^\/invoices\/(?!create)/.test(location.pathname)
-                : location.pathname.startsWith(item.path));
-              return (
-                <button
-                  key={item.path}
-                  className={`nav-item${isActive ? ' active' : ''}`}
-                  type="button"
-                  aria-current={isActive ? 'page' : undefined}
-                  onClick={() => openInvoicePage(item.path)}
-                >
-                  {item.label}
-                </button>
-              );
-            })}
-          </nav>
-        </div>
-
         <div className="sidebar-section customer-summary-sidebar">
           <h3>Profile Summary</h3>
           {customerSessionLoading && !customerSession ? (
@@ -1486,7 +1463,7 @@ export default function App() {
                               return (
                                 <button className="work-item-row work-item-open" key={item.work_item_id} type="button" onClick={() => openWorkDetail(responsibilityDetail.responsibility_id, item.work_item_id)}>
                                   <span className="work-item-description">
-                                    <strong>{label} — {item.work_item}</strong>
+                                    <strong>{item.work_item}</strong>
                                     <small>{item.activity_name} · Owner: {item.owner} · Priority: {item.priority} · Due {item.due_date}</small>
                                   </span>
                                   <em className={`work-item-status status-${item.status.toLowerCase().replace(/\s+/g, '-')}`}>{item.status}</em>
