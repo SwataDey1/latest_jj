@@ -36,6 +36,7 @@ from backend.app.services.document_service import delete_document, ensure_defaul
 from backend.app.services.email_discovery_service import list_demo_emails
 from backend.app.services.embedding_service import embedding_provider
 from backend.app.services.fedex_shipment_service import list_fedex_shipments
+from backend.app.services.invoice_sheet_service import get_order_invoice_data, list_catalog_products
 from backend.app.services.file_registry import compute_content_hash, is_supported_extension
 from backend.app.services.invoice_demo_data import ensure_invoice_demo_data
 from backend.app.services.rag_service import rag_service
@@ -417,6 +418,19 @@ def email_discovery_emails() -> list[dict]:
 @app.get("/api/fedex-shipments")
 def fedex_shipments(order_id: str | None = None) -> list[dict]:
     return list_fedex_shipments(order_id)
+
+
+@app.get("/api/order-invoice/{order_id}")
+def order_invoice(order_id: str) -> dict:
+    data = get_order_invoice_data(order_id)
+    if data is None:
+        raise HTTPException(status_code=404, detail=f"No invoice data found for order {order_id}.")
+    return data
+
+
+@app.get("/api/product-catalog")
+def product_catalog() -> list[dict]:
+    return list_catalog_products()
 
 
 @app.post("/login")

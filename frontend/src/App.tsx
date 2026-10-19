@@ -1779,10 +1779,8 @@ export default function App() {
         </div>
       )}
       <InvoiceCreateDialog
-        accessToken={user.access_token}
         workflow={invoiceCreateWorkflow}
         onClose={() => setInvoiceCreateWorkflow(null)}
-        onViewInvoice={(invoiceId) => openInvoicePage(`/invoices/${invoiceId}`)}
       />
     </div>
   );

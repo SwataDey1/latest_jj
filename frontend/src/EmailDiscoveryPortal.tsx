@@ -90,7 +90,6 @@ export type OrderMapping = {
   customerId?: string;
   productId?: string;
   quantity?: number;
-  productDescription?: string;
   invoiceFormTitle?: 'Create Invoice' | 'Edit Invoice';
 };
 
@@ -189,7 +188,6 @@ const toMapping = (email: MailEmail): OrderMapping => {
     invoiceStatus: invoiceStatus || 'Not created',
     invoiceAmount: email.order?.invoice_amount || undefined,
     invoiceDate: email.date,
-    productDescription: email.order?.description || undefined,
     invoiceFormTitle: CREATE_INVOICE_STATUSES.includes(invoiceStatus.trim().toLowerCase()) ? 'Create Invoice' : 'Edit Invoice',
   };
 };
