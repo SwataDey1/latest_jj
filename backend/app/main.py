@@ -35,6 +35,7 @@ from backend.app.services.demo_dashboard_service import (
 from backend.app.services.document_service import delete_document, ensure_default_user, ensure_demo_users, get_document_by_id, get_documents, save_document
 from backend.app.services.email_discovery_service import list_demo_emails
 from backend.app.services.embedding_service import embedding_provider
+from backend.app.services.fedex_shipment_service import list_fedex_shipments
 from backend.app.services.file_registry import compute_content_hash, is_supported_extension
 from backend.app.services.invoice_demo_data import ensure_invoice_demo_data
 from backend.app.services.rag_service import rag_service
@@ -411,6 +412,11 @@ def auth_options() -> dict[str, list[str]]:
 @app.get("/api/emails")
 def email_discovery_emails() -> list[dict]:
     return list_demo_emails()
+
+
+@app.get("/api/fedex-shipments")
+def fedex_shipments(order_id: str | None = None) -> list[dict]:
+    return list_fedex_shipments(order_id)
 
 
 @app.post("/login")

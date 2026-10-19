@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import FedExConsignmentForm, { type FedExMailDetails } from './FedExConsignmentForm';
 
 type Sensitivity = 'High' | 'Medium' | 'Low';
 
@@ -114,7 +115,7 @@ const FORM_BUTTON_LABEL: Record<ActionType, string> = {
   'Change Delivery SPOC': 'Open SPOC Form',
   'Cancel Order': 'Open Cancellation Form',
   'Create Invoice': 'Open Invoice Form',
-  'FedEx ID Requested': 'Open FedEx Form',
+  'FedEx ID Requested': 'Open FedEx Consignment',
   'Draft Mail': 'Draft Mail',
 };
 const ACTION_REASON: Record<string, string> = {
@@ -150,7 +151,7 @@ const scenarioFor = (subject: string, summary: string) => {
   if (['delay', 'backorder', 'shipping', 'delivery', 'reschedul', 'expedite'].some((k) => text.includes(k))) return 'Delivery Date Change';
   if (text.includes('purchase order') || text.includes('new order')) return 'New Order Creation';
   if (text.includes('invoice') || text.includes('billing') || text.includes('payment')) return 'Invoice Request';
-  if (text.includes('FedEx') || text.includes('consignment') || text.includes('tracking')) return 'FedEx ID Requested';
+  if (text.includes('fedex') || text.includes('consignment') || text.includes('tracking')) return 'FedEx ID Requested';
   return 'General Inquiry';
 };
 
@@ -301,6 +302,8 @@ export default function EmailDiscoveryPortal({ onInvoiceAction }: { workItem: Em
   const [newFeed, setNewFeed] = useState('');
   const [action, setAction] = useState<ActionType | null>(null);
   const [saved, setSaved] = useState(false);
+  const [fedexMail, setFedexMail] = useState<FedExMailDetails | null>(null);
+  const [fedexMailSent, setFedexMailSent] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -354,6 +357,7 @@ export default function EmailDiscoveryPortal({ onInvoiceAction }: { workItem: Em
     setSelectedId(id);
     setAction(null);
     setSaved(false);
+    setFedexMail(null);
   };
 
   const search = () => {
@@ -531,7 +535,9 @@ export default function EmailDiscoveryPortal({ onInvoiceAction }: { workItem: Em
           
           <div className="ownership-history"><h3>Workflow Ownership History</h3><h5>Status : {saved ? 'Advanced to next process' : 'In Progress'}</h5><div className="ownership-timeline"><article className="ownership-entry completed"><span className="ownership-marker" /><div><strong>Previous Owner: {previousOwner}</strong><small>Assigned Date: {selected.date} · Status: Completed</small><p>Email received and details extracted for order lookup.</p></div></article><article className={`ownership-entry ${saved ? 'completed' : 'current'}`}><span className="ownership-marker" /><div><strong>Current Owner: {currentOwner}</strong><small>Assigned Date: {selected.date} · Status: {saved ? 'Completed' : 'In Progress'}</small><p>{saved ? 'Action form saved and workflow advanced.' : (order?.pending_action || 'Reviewing the customer request and preparing the recommended action.')}</p></div></article><article className={`ownership-entry ${saved ? 'current' : 'next'}`}><span className="ownership-marker" /><div><strong>Next Owner: {nextOwner}</strong><small>Assigned Date: {selected.date} · Status: {saved ? 'In Progress' : 'Pending'}</small><p>{saved ? 'Ready to continue the next workflow process.' : 'Will receive the request after the current action is completed.'}</p></div></article></div></div>
           <div className="action-bar recommendation-details"><div><h3>Recommended Action</h3><dl className="recommendation-grid"><div><dt>Recommended Action</dt><dd>{recommendedAction && ACTION_LABEL[recommendedAction]}</dd></div><div><dt>Reason</dt><dd>{ACTION_REASON[selected.scenario] || 'The selected email requires customer order follow-up.'}</dd></div><div><dt>Priority</dt><dd>{selected.sensitivity}</dd></div></dl></div><button className="btn pri" type="button" onClick={() => { setAction(recommendedAction); setSaved(false); }}>{recommendedAction && FORM_BUTTON_LABEL[recommendedAction]}</button></div>
-          {action && <div className="ov action-modal" onClick={() => setAction(null)}><div className="modal action-modal-card" onClick={(event) => event.stopPropagation()}><div className="row" style={{ justifyContent: 'space-between' }}><h3>{recommendedAction && ACTION_LABEL[recommendedAction]}</h3><button className="x" type="button" aria-label="Close form" onClick={() => setAction(null)}>×</button></div><ActionForm key={`${selected.code}-${action}`} action={action} mapping={mapping} email={selected} saved={saved} onSave={() => setSaved(true)} onCancel={() => setAction(null)} /></div></div>}
+          {action === 'FedEx ID Requested' && <div className="ov action-modal" onClick={() => { setAction(null); setFedexMail(null); }}><FedExConsignmentForm key={`${selected.code}-fedex`} apiBase={API_BASE} orderId={selected.orderId} saved={saved} onSave={() => setSaved(true)} onCancel={() => { setAction(null); setFedexMail(null); }} onDraftMail={(details) => { setFedexMail(details); setFedexMailSent(false); }} /></div>}
+          {action === 'FedEx ID Requested' && fedexMail && <div className="ov action-modal" onClick={() => setFedexMail(null)}><div className="modal action-modal-card" onClick={(event) => event.stopPropagation()}><div className="row" style={{ justifyContent: 'space-between' }}><h3>Draft Mail · FedEx Tracking Number</h3><button className="x" type="button" aria-label="Close mail draft" onClick={() => setFedexMail(null)}>×</button></div><ActionForm key={`${selected.code}-fedex-mail-${fedexMail.orderId}-${fedexMail.tracking}`} action="Draft Mail" mapping={mapping} email={selected} saved={fedexMailSent} initialValues={{ mailSubject: `Re: ${selected.subject} - FedEx Tracking No. ${fedexMail.tracking}`, mailBody: fedexTrackingMailBody(fedexMail) }} onSave={() => setFedexMailSent(true)} onCancel={() => setFedexMail(null)} /></div></div>}
+          {action && action !== 'FedEx ID Requested' && <div className="ov action-modal" onClick={() => setAction(null)}><div className="modal action-modal-card" onClick={(event) => event.stopPropagation()}><div className="row" style={{ justifyContent: 'space-between' }}><h3>{recommendedAction && ACTION_LABEL[recommendedAction]}</h3><button className="x" type="button" aria-label="Close form" onClick={() => setAction(null)}>×</button></div><ActionForm key={`${selected.code}-${action}`} action={action} mapping={mapping} email={selected} saved={saved} onSave={() => setSaved(true)} onCancel={() => setAction(null)} /></div></div>}
         </section>
       )}
 
@@ -579,13 +585,30 @@ export default function EmailDiscoveryPortal({ onInvoiceAction }: { workItem: Em
   );
 }
 
-function ActionForm({ action, mapping, email, saved, onSave, onCancel }: { action: ActionType; mapping: OrderMapping; email: MailEmail; saved: boolean; onSave: () => void; onCancel: () => void }) {
+function fedexTrackingMailBody({ orderId, tracking, service, shipDate, status, recipient }: FedExMailDetails) {
+  const details = [
+    `FedEx Tracking Number: ${tracking}`,
+    service && `FedEx Service: ${service}`,
+    shipDate && `Ship Date: ${shipDate}`,
+    status && `Shipment Status: ${status}`,
+  ].filter(Boolean).join('\n');
+  return [
+    `Dear ${recipient || 'Customer'},`,
+    `Thank you for your enquiry regarding order ${orderId}. Please find the FedEx consignment details below:`,
+    details,
+    `You can track your shipment at https://www.fedex.com/fedextrack/?trknbr=${encodeURIComponent(tracking)}`,
+    'Kind regards,\nCustomer Service Team',
+  ].join('\n\n');
+}
+
+function ActionForm({ action, mapping, email, saved, onSave, onCancel, initialValues }: { action: ActionType; mapping: OrderMapping; email: MailEmail; saved: boolean; onSave: () => void; onCancel: () => void; initialValues?: Record<string, string> }) {
   const [values, setValues] = useState<Record<string, string>>({
     orderNumber: mapping.orderNumber, customerName: mapping.customerName, shipName: mapping.customerName, shipTo: '', city: '', state: '', postalCode: '', phone: '',
     existingDate: '', newDate: '', name: '', email: email.from, department: '', reason: email.content, remarks: email.nextAction,
     invoiceNumber: mapping.invoiceNumber, seller: '', customerDetails: `${mapping.customerName} · ${mapping.orderNumber}`, bill: mapping.customerName, ship: mapping.customerName,
     product: email.order?.description ?? '', quantity: '', unitPrice: '', tax: '', terms: '', total: formatAmount(mapping.invoiceAmount),
     mailTo: email.from, mailSubject: `Re: ${email.subject}`, mailBody: email.content,
+    ...initialValues,
   });
   const [confirming, setConfirming] = useState(false);
   const update = (key: string) => (event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => setValues({ ...values, [key]: event.target.value });
