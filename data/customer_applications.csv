@@ -1,0 +1,64 @@
+customer_id,application_name,tenancy_id,rights
+1,UI-AI Solutions,1001,Read|Write
+1,JDE,1002,Read
+1,Salesforce,1003,Admin
+2,UI-AI Solutions,1004,Read
+2,JDE,1005,Read|Write
+2,Salesforce,1006,Read
+3,UI-AI Solutions,1007,Admin
+3,JDE,1008,Read
+3,Salesforce,1009,Read|Write
+4,UI-AI Solutions,1010,Read|Write
+4,JDE,1011,Read
+4,Salesforce,1012,Admin
+101,UI-AI Solutions,1013,Read
+101,JDE,1014,Read|Write
+101,Salesforce,1015,Read
+102,UI-AI Solutions,1016,Admin
+102,JDE,1017,Read
+102,Salesforce,1018,Read|Write
+103,UI-AI Solutions,1019,Read|Write
+103,JDE,1020,Read
+103,Salesforce,1021,Admin
+104,UI-AI Solutions,1022,Read
+104,JDE,1023,Read|Write
+104,Salesforce,1024,Read
+105,UI-AI Solutions,1025,Admin
+105,JDE,1026,Read
+105,Salesforce,1027,Read|Write
+106,UI-AI Solutions,1028,Read|Write
+106,JDE,1029,Read
+106,Salesforce,1030,Admin
+107,UI-AI Solutions,1031,Read
+107,JDE,1032,Read|Write
+107,Salesforce,1033,Read
+108,UI-AI Solutions,1034,Admin
+108,JDE,1035,Read
+108,Salesforce,1036,Read|Write
+109,UI-AI Solutions,1037,Read|Write
+109,JDE,1038,Read
+109,Salesforce,1039,Admin
+110,UI-AI Solutions,1040,Read
+110,JDE,1041,Read|Write
+110,Salesforce,1042,Read
+111,UI-AI Solutions,1043,Admin
+111,JDE,1044,Read
+111,Salesforce,1045,Read|Write
+112,UI-AI Solutions,1046,Read|Write
+112,JDE,1047,Read
+112,Salesforce,1048,Admin
+113,UI-AI Solutions,1049,Read
+113,JDE,1050,Read|Write
+113,Salesforce,1051,Read
+114,UI-AI Solutions,1052,Admin
+114,JDE,1053,Read
+114,Salesforce,1054,Read|Write
+115,UI-AI Solutions,1055,Read|Write
+115,JDE,1056,Read
+115,Salesforce,1057,Admin
+116,UI-AI Solutions,1058,Read
+116,JDE,1059,Read|Write
+116,Salesforce,1060,Read
+117,UI-AI Solutions,1061,Admin
+117,JDE,1062,Read
+117,Salesforce,1063,Read|Write

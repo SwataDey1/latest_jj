@@ -1,0 +1,22 @@
+customer_id,client_id,customer_category,customer_name,username,password,persona,rbac,policy_id,crud_permission,approve_reject,itsm_level
+1,1,Partner,Wipro,abhiraj,pass123,EndUser,EndUser,US Policy,CRUD,Approve,L0
+2,1,Partner,Wipro,manager,pass123,Manager,Manager,US Policy,CRUD,Approve,L0
+3,1,Partner,Wipro,admin,pass123,Admin,Admin,US Policy,CRUD,Approve,L0
+4,1,Client,Wipro,Pushpansh,CustPswd,EndUser,EndUser,US Policy,CRUD,Approve,L0
+101,1,Partner,Wipro,role01@local.dev,role01-demo,role-01,EndUser,US Policy,CRUD,Reject,L0
+102,1,Partner,Wipro,role02@local.dev,role02-demo,role-02,EndUser,US Policy,CRUD,Reject,L0
+103,1,Partner,Wipro,role03@local.dev,role03-demo,role-03,EndUser,US Policy,CRUD,Reject,L0
+104,1,Partner,Wipro,role04@local.dev,role04-demo,role-04,EndUser,US Policy,CRUD,Reject,L0
+105,1,Partner,Wipro,role05@local.dev,role05-demo,role-05,EndUser,US Policy,CRUD,Reject,L0
+106,2,Client,Acme Medical,role06@local.dev,role06-demo,role-06,EndUser,US Policy,CRUD,Reject,L0
+107,2,Client,Acme Medical,role07@local.dev,role07-demo,role-07,Manager,US Policy,CRUD,Approve,L0
+108,2,Client,Acme Medical,role08@local.dev,role08-demo,role-08,Manager,US Policy,CRUD,Approve,L0
+109,2,Client,Acme Medical,role09@local.dev,role09-demo,role-09,Manager,US Policy,CRUD,Approve,L0
+110,3,Vendor,Northstar Health,role10@local.dev,role10-demo,role-10,EndUser,US Policy,CRUD,Reject,L0
+111,3,Vendor,Northstar Health,role11@local.dev,role11-demo,role-11,Admin,US Policy,CRUD,Approve,L0
+112,3,Vendor,Northstar Health,role12@local.dev,role12-demo,role-12,EndUser,US Policy,CRUD,Reject,L0
+113,3,Vendor,Northstar Health,role13@local.dev,role13-demo,role-13,Manager,US Policy,CRUD,Approve,L0
+114,4,Client,Contoso Devices,role14@local.dev,role14-demo,role-14,EndUser,US Policy,CRUD,Reject,L0
+115,4,Client,Contoso Devices,role15@local.dev,role15-demo,role-15,EndUser,US Policy,CRUD,Reject,L0
+116,4,Client,Contoso Devices,role16@local.dev,role16-demo,role-16,EndUser,US Policy,CRUD,Reject,L0
+117,4,Client,Contoso Devices,role17@local.dev,role17-demo,role-17,Manager,US Policy,CRUD,Approve,L0

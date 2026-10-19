@@ -1,0 +1,10 @@
+node_modules/
+.venv/
+.venv_mac/
+.venv-chatbot/
+__pycache__/
+*.pyc
+.pytest_cache/
+frontend/dist/
+*.tsbuildinfo
+.env
