@@ -79,12 +79,24 @@ function ReadOnlyField({ label, value }: { label: string; value: string | null |
   return <TextField fullWidth size="small" label={label} value={value ?? ''} multiline InputProps={{ readOnly: true }} InputLabelProps={{ shrink: true }} />;
 }
 
-export type InvoiceWorkflowPrefill = { orderNumber?: string; companyId?: string; customerId?: string; productId?: string; quantity?: number };
+export type InvoiceWorkflowPrefill = {
+  orderNumber?: string;
+  companyId?: string;
+  customerId?: string;
+  productId?: string;
+  quantity?: number;
+  customerName?: string;
+  productDescription?: string;
+  invoiceAmount?: string;
+  invoiceFormTitle?: string;
+};
 
 type InvoiceFormPageProps = {
   /** When provided, the form runs embedded (e.g. in a dialog) instead of using router state/navigation. */
-  embedded?: { workflow?: InvoiceWorkflowPrefill; onCancel: () => void; onSaved: (invoice: Invoice) => void };
+  embedded?: { workflow?: InvoiceWorkflowPrefill; title?: string; onCancel: () => void; onSaved: (invoice: Invoice) => void };
 };
+
+const sameText = (a?: string | null, b?: string | null) => !!a && !!b && a.trim().toLowerCase() === b.trim().toLowerCase();
 
 export default function InvoiceFormPage({ embedded }: InvoiceFormPageProps = {}) {
   const api = useInvoiceApi();
@@ -123,18 +135,30 @@ export default function InvoiceFormPage({ embedded }: InvoiceFormPageProps = {})
       setProducts(productResponse.data);
       const workflow = id ? undefined : embedded ? embedded.workflow : (location.state as { workflow?: InvoiceWorkflowPrefill } | null)?.workflow;
       if (workflow) {
-        const workflowProduct = productResponse.data.find((item) => item.product_id === workflow.productId);
-        const workflowCustomer = customerResponse.data.find((item) => item.customer_id === workflow.customerId);
+        const workflowProduct = productResponse.data.find((item) => item.product_id === workflow.productId)
+          ?? productResponse.data.find((item) => sameText(item.product_name, workflow.productDescription));
+        const workflowCustomer = customerResponse.data.find((item) => item.customer_id === workflow.customerId)
+          ?? customerResponse.data.find((item) => sameText(item.customer_name, workflow.customerName));
+        const customerLabel = workflow.customerName && workflow.customerName !== '—' ? workflow.customerName : undefined;
         setHeader((current) => ({
           ...current,
           po_reference: workflow.orderNumber ?? current.po_reference,
           company_id: workflow.companyId ?? current.company_id,
-          customer_id: workflow.customerId ?? current.customer_id,
+          customer_id: workflow.customerId ?? workflowCustomer?.customer_id ?? current.customer_id,
           place_of_supply: workflowCustomer?.state_code ?? current.place_of_supply,
-          billing_address: workflowCustomer?.billing_address ?? current.billing_address,
-          shipping_address: workflowCustomer?.shipping_address ?? workflowCustomer?.billing_address ?? current.shipping_address,
+          billing_address: workflowCustomer?.billing_address ?? customerLabel ?? current.billing_address,
+          shipping_address: workflowCustomer?.shipping_address ?? workflowCustomer?.billing_address ?? customerLabel ?? current.shipping_address,
           delivery_spoc: workflowCustomer?.contact_person ?? current.delivery_spoc,
         }));
+        const workflowAmount = Number(workflow.invoiceAmount);
+        if (!workflowProduct && (workflow.productDescription || workflowAmount > 0)) {
+          setLines([{
+            ...emptyLine(),
+            description: workflow.productDescription ?? '',
+            quantity: String(workflow.quantity ?? 1),
+            rate: workflowAmount > 0 ? String(workflowAmount) : '',
+          }]);
+        }
         if (workflowProduct) {
           setLines([{
             key: ++lineKey,
@@ -298,7 +322,7 @@ export default function InvoiceFormPage({ embedded }: InvoiceFormPageProps = {})
     <Box component="form" onSubmit={handleSubmit} noValidate sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', lg: 'minmax(0, 1fr) 220px' }, gap: 2, alignItems: 'start' }}>
       <Stack spacing={2}>
         <Stack direction="row" justifyContent="space-between" alignItems="center">
-          <Typography variant="h5" component="h3">{isEdit ? `Edit Invoice ${header.invoice_no}` : 'Create Invoice'}</Typography>
+          <Typography variant="h5" component="h3">{isEdit ? `Edit Invoice ${header.invoice_no}` : embedded?.title ?? 'Create Invoice'}</Typography>
           <Stack direction="row" spacing={1}>
             <Button onClick={() => embedded ? embedded.onCancel() : navigate(isEdit ? `/invoices/${id}` : '/invoices')}>Cancel</Button>
             <Button type="submit" variant="contained" disabled={saving}>{saving ? 'Saving…' : 'Save Invoice'}</Button>

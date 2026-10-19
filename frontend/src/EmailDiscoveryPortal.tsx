@@ -90,6 +90,8 @@ export type OrderMapping = {
   customerId?: string;
   productId?: string;
   quantity?: number;
+  productDescription?: string;
+  invoiceFormTitle?: 'Create Invoice' | 'Edit Invoice';
 };
 
 const API_BASE =
@@ -130,6 +132,8 @@ const ACTION_REASON: Record<string, string> = {
 const MAILBOXES = ['HP Mailbox', 'HR Mailbox', 'Finance Mailbox', 'Legal Mailbox'];
 const FEEDS = ['Exchange', 'Outlook', 'Teams', 'Shared Mailbox'];
 const NO_INVOICE_STATUSES = ['', 'not started', 'not created'];
+// Invoices that are still pending (or not yet started) are created; any other status edits the existing invoice.
+const CREATE_INVOICE_STATUSES = [...NO_INVOICE_STATUSES, 'pending'];
 const EMPTY_ADV: AdvFilters = { subject: '', sender: '', attachment: '', sensitivity: '', from: '', to: '', hasAttachment: false };
 const BADGE: Record<Sensitivity, string> = { High: '#ef4444', Medium: '#f59e0b', Low: '#10b981' };
 const has = (v: string, q: string) => !q || v.toLowerCase().includes(q.toLowerCase());
@@ -185,6 +189,8 @@ const toMapping = (email: MailEmail): OrderMapping => {
     invoiceStatus: invoiceStatus || 'Not created',
     invoiceAmount: email.order?.invoice_amount || undefined,
     invoiceDate: email.date,
+    productDescription: email.order?.description || undefined,
+    invoiceFormTitle: CREATE_INVOICE_STATUSES.includes(invoiceStatus.trim().toLowerCase()) ? 'Create Invoice' : 'Edit Invoice',
   };
 };
 
@@ -514,27 +520,11 @@ export default function EmailDiscoveryPortal({ onInvoiceAction }: { workItem: Em
       <dd>{show(order?.pending_action)}</dd>
     </div>
   </dl>
-
-  {invoiceMissing && (
-    <>
-      <div className="invoice-actions">
-        {onInvoiceAction && (
-          <button
-            className="btn pri"
-            type="button"
-            onClick={() => onInvoiceAction("create", mapping)}
-          >
-            Create Invoice
-          </button>
-        )}
-      </div>
-    </>
-  )}
 </div>
           </div>
           
           <div className="ownership-history"><h3>Workflow Ownership History</h3><h5>Status : {saved ? 'Advanced to next process' : 'In Progress'}</h5><div className="ownership-timeline"><article className="ownership-entry completed"><span className="ownership-marker" /><div><strong>Previous Owner: {previousOwner}</strong><small>Assigned Date: {selected.date} · Status: Completed</small><p>Email received and details extracted for order lookup.</p></div></article><article className={`ownership-entry ${saved ? 'completed' : 'current'}`}><span className="ownership-marker" /><div><strong>Current Owner: {currentOwner}</strong><small>Assigned Date: {selected.date} · Status: {saved ? 'Completed' : 'In Progress'}</small><p>{saved ? 'Action form saved and workflow advanced.' : (order?.pending_action || 'Reviewing the customer request and preparing the recommended action.')}</p></div></article><article className={`ownership-entry ${saved ? 'current' : 'next'}`}><span className="ownership-marker" /><div><strong>Next Owner: {nextOwner}</strong><small>Assigned Date: {selected.date} · Status: {saved ? 'In Progress' : 'Pending'}</small><p>{saved ? 'Ready to continue the next workflow process.' : 'Will receive the request after the current action is completed.'}</p></div></article></div></div>
-          <div className="action-bar recommendation-details"><div><h3>Recommended Action</h3><dl className="recommendation-grid"><div><dt>Recommended Action</dt><dd>{recommendedAction && ACTION_LABEL[recommendedAction]}</dd></div><div><dt>Reason</dt><dd>{ACTION_REASON[selected.scenario] || 'The selected email requires customer order follow-up.'}</dd></div><div><dt>Priority</dt><dd>{selected.sensitivity}</dd></div></dl></div><button className="btn pri" type="button" onClick={() => { setAction(recommendedAction); setSaved(false); }}>{recommendedAction && FORM_BUTTON_LABEL[recommendedAction]}</button></div>
+          <div className="action-bar recommendation-details"><div><h3>Recommended Action</h3><dl className="recommendation-grid"><div><dt>Recommended Action</dt><dd>{recommendedAction && ACTION_LABEL[recommendedAction]}</dd></div><div><dt>Reason</dt><dd>{ACTION_REASON[selected.scenario] || 'The selected email requires customer order follow-up.'}</dd></div><div><dt>Priority</dt><dd>{selected.sensitivity}</dd></div></dl></div><button className="btn pri" type="button" onClick={() => { if (recommendedAction === 'Create Invoice' && onInvoiceAction) { onInvoiceAction('create', mapping); return; } setAction(recommendedAction); setSaved(false); }}>{recommendedAction === 'Create Invoice' && onInvoiceAction ? mapping.invoiceFormTitle : recommendedAction && FORM_BUTTON_LABEL[recommendedAction]}</button></div>
           {action === 'FedEx ID Requested' && <div className="ov action-modal" onClick={() => { setAction(null); setFedexMail(null); }}><FedExConsignmentForm key={`${selected.code}-fedex`} apiBase={API_BASE} orderId={selected.orderId} saved={saved} onSave={() => setSaved(true)} onCancel={() => { setAction(null); setFedexMail(null); }} onDraftMail={(details) => { setFedexMail(details); setFedexMailSent(false); }} /></div>}
           {action === 'FedEx ID Requested' && fedexMail && <div className="ov action-modal" onClick={() => setFedexMail(null)}><div className="modal action-modal-card" onClick={(event) => event.stopPropagation()}><div className="row" style={{ justifyContent: 'space-between' }}><h3>Draft Mail · FedEx Tracking Number</h3><button className="x" type="button" aria-label="Close mail draft" onClick={() => setFedexMail(null)}>×</button></div><ActionForm key={`${selected.code}-fedex-mail-${fedexMail.orderId}-${fedexMail.tracking}`} action="Draft Mail" mapping={mapping} email={selected} saved={fedexMailSent} initialValues={{ mailSubject: `Re: ${selected.subject} - FedEx Tracking No. ${fedexMail.tracking}`, mailBody: fedexTrackingMailBody(fedexMail) }} onSave={() => setFedexMailSent(true)} onCancel={() => setFedexMail(null)} /></div></div>}
           {action && action !== 'FedEx ID Requested' && <div className="ov action-modal" onClick={() => setAction(null)}><div className="modal action-modal-card" onClick={(event) => event.stopPropagation()}><div className="row" style={{ justifyContent: 'space-between' }}><h3>{recommendedAction && ACTION_LABEL[recommendedAction]}</h3><button className="x" type="button" aria-label="Close form" onClick={() => setAction(null)}>×</button></div><ActionForm key={`${selected.code}-${action}`} action={action} mapping={mapping} email={selected} saved={saved} onSave={() => setSaved(true)} onCancel={() => setAction(null)} /></div></div>}
