@@ -79,11 +79,20 @@ function ReadOnlyField({ label, value }: { label: string; value: string | null |
   return <TextField fullWidth size="small" label={label} value={value ?? ''} multiline InputProps={{ readOnly: true }} InputLabelProps={{ shrink: true }} />;
 }
 
-export default function InvoiceFormPage() {
+export type InvoiceWorkflowPrefill = { orderNumber?: string; companyId?: string; customerId?: string; productId?: string; quantity?: number };
+
+type InvoiceFormPageProps = {
+  /** When provided, the form runs embedded (e.g. in a dialog) instead of using router state/navigation. */
+  embedded?: { workflow?: InvoiceWorkflowPrefill; onCancel: () => void; onSaved: (invoice: Invoice) => void };
+};
+
+export default function InvoiceFormPage({ embedded }: InvoiceFormPageProps = {}) {
   const api = useInvoiceApi();
   const navigate = useNavigate();
   const location = useLocation();
-  const { id } = useParams();
+  const params = useParams();
+  const id = embedded ? undefined : params.id;
+  const locationSearch = embedded ? '' : location.search;
   const isEdit = !!id;
   const [companies, setCompanies] = useState<Company[]>([]);
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -112,7 +121,7 @@ export default function InvoiceFormPage() {
       setCompanies(companyResponse.data);
       setCustomers(customerResponse.data);
       setProducts(productResponse.data);
-      const workflow = !id ? (location.state as { workflow?: { orderNumber?: string; companyId?: string; customerId?: string; productId?: string; quantity?: number } } | null)?.workflow : undefined;
+      const workflow = id ? undefined : embedded ? embedded.workflow : (location.state as { workflow?: InvoiceWorkflowPrefill } | null)?.workflow;
       if (workflow) {
         const workflowProduct = productResponse.data.find((item) => item.product_id === workflow.productId);
         const workflowCustomer = customerResponse.data.find((item) => item.customer_id === workflow.customerId);
@@ -139,7 +148,7 @@ export default function InvoiceFormPage() {
           }]);
         }
       }
-      const queryReference = new URLSearchParams(location.search).get('po_reference');
+      const queryReference = new URLSearchParams(locationSearch).get('po_reference');
       if (!id && queryReference) setHeader((current) => ({ ...current, po_reference: queryReference }));
       const invoice = invoiceResponse?.data;
       if (invoice) {
@@ -174,7 +183,7 @@ export default function InvoiceFormPage() {
       if (current) setLoadError(getErrorMessage(error, 'Invoice data could not be loaded.'));
     });
     return () => { current = false; };
-  }, [api, id, location.search]);
+  }, [api, id, locationSearch]);
 
   const company = companies.find((item) => String(item.company_id) === header.company_id) ?? null;
   const customer = customers.find((item) => String(item.customer_id) === header.customer_id) ?? null;
@@ -274,7 +283,8 @@ export default function InvoiceFormPage() {
       const { data } = id
         ? await api.put<Invoice>(`/invoices/${encodeURIComponent(id)}`, payload)
         : await api.post<Invoice>('/invoices', payload);
-      navigate(`/invoices/${data.invoice_id}`);
+      if (embedded) embedded.onSaved(data);
+      else navigate(`/invoices/${data.invoice_id}`);
     } catch (error) {
       setSubmitError(getErrorMessage(error, 'Invoice could not be saved.'));
     } finally {
@@ -290,7 +300,7 @@ export default function InvoiceFormPage() {
         <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography variant="h5" component="h3">{isEdit ? `Edit Invoice ${header.invoice_no}` : 'Create Invoice'}</Typography>
           <Stack direction="row" spacing={1}>
-            <Button onClick={() => navigate(isEdit ? `/invoices/${id}` : '/invoices')}>Cancel</Button>
+            <Button onClick={() => embedded ? embedded.onCancel() : navigate(isEdit ? `/invoices/${id}` : '/invoices')}>Cancel</Button>
             <Button type="submit" variant="contained" disabled={saving}>{saving ? 'Saving…' : 'Save Invoice'}</Button>
           </Stack>
         </Stack>

@@ -16,7 +16,7 @@ export const INVOICE_NAV_ITEMS = [
   { path: '/invoices', label: 'Invoice List' },
 ] as const;
 
-const theme = createTheme({
+export const invoiceTheme = createTheme({
   palette: { primary: { main: '#1c5b63' } },
   typography: { fontFamily: 'inherit' },
 });
@@ -25,7 +25,7 @@ export default function InvoiceModule({ accessToken }: { accessToken: string }) 
   const api = useMemo(() => createInvoiceApi(accessToken), [accessToken]);
 
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={invoiceTheme}>
       <InvoiceApiContext.Provider value={api}>
         <section className="invoice-module">
           <Routes>

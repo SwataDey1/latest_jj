@@ -7,6 +7,7 @@ import VoiceDiscoveryPortal from './VoiceDiscoveryPortal';
 import DocumentDiscoveryPortal from './DocumentDiscoveryPortal';
 import OrderView from './OrderView';
 import InvoiceModule, { INVOICE_NAV_ITEMS, INVOICE_ROUTE_PATTERN } from './invoices/InvoiceModule';
+import InvoiceCreateDialog from './invoices/InvoiceCreateDialog';
 
 type CustomerSession = {
   customer_id: string;
@@ -886,6 +887,8 @@ export default function App() {
   const routerNavigate = useNavigate();
   const location = useLocation();
 
+  const [invoiceCreateWorkflow, setInvoiceCreateWorkflow] = useState<OrderMapping | null>(null);
+
   const openInvoicePage = (path: string, state?: { workflow?: OrderMapping }) => {
     routerNavigate(path, { state });
     setSelectedKpiId(null);
@@ -1445,7 +1448,7 @@ export default function App() {
                       <>
                         <div className="panel-heading"><div><p className="eyebrow">Communication responsibility</p><h3>{responsibilityDetail.responsibility}</h3></div></div>
                         <div className="communication-inline-portal">
-                          {selectedWorkDetail.type === 'Email' && <EmailDiscoveryPortal workItem={{ work_item_id: selectedWorkDetail.work_item_id, work_item: selectedWorkDetail.work_item, customer_request_id: selectedWorkDetail.customer_request_id, label: selectedWorkDetail.label }} onInvoiceAction={(action, mapping) => openInvoicePage(action === 'create' ? '/invoices/create' : action === 'edit' ? `/invoices/${mapping.invoiceId}/edit` : `/invoices/${mapping.invoiceId}/view`, action === 'create' ? { workflow: mapping } : undefined)} />}
+                          {selectedWorkDetail.type === 'Email' && <EmailDiscoveryPortal workItem={{ work_item_id: selectedWorkDetail.work_item_id, work_item: selectedWorkDetail.work_item, customer_request_id: selectedWorkDetail.customer_request_id, label: selectedWorkDetail.label }} onInvoiceAction={(action, mapping) => action === 'create' ? setInvoiceCreateWorkflow(mapping) : openInvoicePage(action === 'edit' ? `/invoices/${mapping.invoiceId}/edit` : `/invoices/${mapping.invoiceId}/view`)} />}
                           {selectedWorkDetail.type === 'Chat' && <ChatDiscoveryPortal workItem={{ work_item_id: selectedWorkDetail.work_item_id, work_item: selectedWorkDetail.work_item, customer_request_id: selectedWorkDetail.customer_request_id, label: selectedWorkDetail.label }} />}
                           {selectedWorkDetail.type === 'Voice' && <VoiceDiscoveryPortal workItem={{ work_item_id: selectedWorkDetail.work_item_id, work_item: selectedWorkDetail.work_item, customer_request_id: selectedWorkDetail.customer_request_id, label: selectedWorkDetail.label }} />}
                           {selectedWorkDetail.type === 'Document' && <DocumentDiscoveryPortal workItem={{ work_item_id: selectedWorkDetail.work_item_id, work_item: selectedWorkDetail.work_item, customer_request_id: selectedWorkDetail.customer_request_id, label: selectedWorkDetail.label }} />}
@@ -1766,7 +1769,7 @@ export default function App() {
               <iframe key={selectedWorkDetail.work_item_id} className="chat-dialog-frame" src={workChatUrl} title="Chat Discovery document assistant" />
             ) : (
               <div className="email-dialog-content">
-                {workDiscovery === 'email' && <EmailDiscoveryPortal workItem={{ work_item_id: selectedWorkDetail.work_item_id, work_item: selectedWorkDetail.work_item, customer_request_id: selectedWorkDetail.customer_request_id, label: selectedWorkDetail.label }} onInvoiceAction={(action, mapping) => openInvoicePage(action === 'create' ? '/invoices/create' : action === 'edit' ? `/invoices/${mapping.invoiceId}/edit` : `/invoices/${mapping.invoiceId}/view`, action === 'create' ? { workflow: mapping } : undefined)} />}
+                {workDiscovery === 'email' && <EmailDiscoveryPortal workItem={{ work_item_id: selectedWorkDetail.work_item_id, work_item: selectedWorkDetail.work_item, customer_request_id: selectedWorkDetail.customer_request_id, label: selectedWorkDetail.label }} onInvoiceAction={(action, mapping) => action === 'create' ? setInvoiceCreateWorkflow(mapping) : openInvoicePage(action === 'edit' ? `/invoices/${mapping.invoiceId}/edit` : `/invoices/${mapping.invoiceId}/view`)} />}
                 {workDiscovery === 'chat-list' && <ChatDiscoveryPortal workItem={{ work_item_id: selectedWorkDetail.work_item_id, work_item: selectedWorkDetail.work_item, customer_request_id: selectedWorkDetail.customer_request_id, label: selectedWorkDetail.label }} />}
                 {workDiscovery === 'voice' && <VoiceDiscoveryPortal workItem={{ work_item_id: selectedWorkDetail.work_item_id, work_item: selectedWorkDetail.work_item, customer_request_id: selectedWorkDetail.customer_request_id, label: selectedWorkDetail.label }} />}
                 {workDiscovery === 'document' && <DocumentDiscoveryPortal workItem={{ work_item_id: selectedWorkDetail.work_item_id, work_item: selectedWorkDetail.work_item, customer_request_id: selectedWorkDetail.customer_request_id, label: selectedWorkDetail.label }} />}
@@ -1798,6 +1801,12 @@ export default function App() {
           </form>
         </div>
       )}
+      <InvoiceCreateDialog
+        accessToken={user.access_token}
+        workflow={invoiceCreateWorkflow}
+        onClose={() => setInvoiceCreateWorkflow(null)}
+        onViewInvoice={(invoiceId) => openInvoicePage(`/invoices/${invoiceId}`)}
+      />
     </div>
   );
 }
