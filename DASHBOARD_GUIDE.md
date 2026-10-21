@@ -49,7 +49,8 @@ The existing application persona list remains intact. The supplied workbook has 
 - 12 synthetic requests, 50 process execution rows, and 14 example SLA alerts.
 - Four example process stages: Capture Order, Validate Order, Submit Order, and Delivery.
 - Two synthetic resource assignments: `admin@local.dev` and `sales@local.dev`.
-- Separate sheets for requests, process master, activities/tasks, assignments, workflow definitions, executions, KPI definitions/measurements, alert rules/history, business outcomes, and a 134-field data dictionary.
+- The `Customer_master` sheet with 21 customer profile/account records, used by the backend instead of a separate customer master CSV.
+- Separate sheets for requests, process master, activities/tasks, assignments, workflow definitions, executions, KPI definitions/measurements, alert rules/history, business outcomes, and a 146-field data dictionary.
 
 The measurements are deliberately generated examples. Their numerator/denominator values, sample sizes, process statuses, timestamps, retry, durations, thresholds, and alert values are synthetic, not copied from the business workbook and not approved J&J targets. The sample process flow and SLA minutes are also illustrative.
 

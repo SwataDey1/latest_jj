@@ -27,7 +27,7 @@ def db_session():
     engine.dispose()
 
 
-def test_customer_master_login_and_session_are_csv_backed(db_session):
+def test_customer_master_login_and_session_are_workbook_backed(db_session):
     options = auth_options()
     assert {"Partner", "Client", "Vendor"} <= set(options["categories"])
     assert {"EndUser", "Manager", "Admin"} <= set(options["personas"])
@@ -46,7 +46,7 @@ def test_customer_master_login_and_session_are_csv_backed(db_session):
     )
 
     assert response["session"]["customer_id"] == "2"
-    assert response["session"]["customer_name"] == "Wipro"
+    assert response["session"]["customer_name"] == "J&J Mentor"
     assert response["session"]["rbac_role"] == "Manager"
     assert response["session"]["application_access"][0] == {
         "application_name": "UI-AI Solutions",

@@ -18,6 +18,7 @@ from backend.app.services.demo_accounts import DEMO_USERS
 SOURCE = ROOT / "storage" / "Medical_Device_Business_Services_Inc_Mentor_08_09_2026.xlsx"
 OUTPUT = ROOT / "data" / "demo_process_kpi_data.xlsx"
 JSON_OUTPUT = ROOT / "data" / "demo_process_kpi_data.json"
+CUSTOMER_MASTER_SHEET = "Customer_master"
 PROCESSES = [
     ("PROC-ORDER-CAPTURE", "Capture Order", "ACT-CAPTURE", "Capture order request", 1, 90),
     ("PROC-ORDER-VALIDATE", "Validate Order", "ACT-VALIDATE", "Validate customer and order", 2, 120),
@@ -351,10 +352,45 @@ def _observation_value(definition: dict[str, Any], numerator: float, denominator
     return round(numerator / denominator * 100, 2)
 
 
+def read_customer_master_rows() -> tuple[list[Any], list[list[Any]]]:
+    workbook_candidates = (
+        OUTPUT,
+        *sorted((ROOT / "data").glob("demo_process_kpi_data *.xlsx"), reverse=True),
+    )
+    for workbook_path in workbook_candidates:
+        if not workbook_path.exists():
+            continue
+        source = load_workbook(workbook_path, read_only=True, data_only=True)
+        try:
+            sheet_name = next(
+                (
+                    name for name in source.sheetnames
+                    if name.casefold() == CUSTOMER_MASTER_SHEET.casefold()
+                ),
+                None,
+            )
+            if sheet_name is None:
+                continue
+            rows = source[sheet_name].iter_rows(values_only=True)
+            headers = list(next(rows))
+            records = [
+                list(row)
+                for row in rows
+                if any(value is not None for value in row)
+            ]
+            return headers, records
+        finally:
+            source.close()
+    raise FileNotFoundError(
+        f"A demo workbook with a {CUSTOMER_MASTER_SHEET} sheet was not found"
+    )
+
+
 def main() -> None:
     if not SOURCE.exists():
         raise FileNotFoundError(f"Source business workbook not found: {SOURCE}")
 
+    customer_master_headers, customer_master_rows = read_customer_master_rows()
     definitions = extract_kpi_definitions(SOURCE)
     responsibilities = extract_responsibilities(SOURCE)
     demo_resources = build_demo_resources(definitions)
@@ -499,6 +535,7 @@ def main() -> None:
 
     workbook = Workbook()
     workbook.remove(workbook.active)
+    add_sheet(workbook, CUSTOMER_MASTER_SHEET, customer_master_headers, customer_master_rows)
     add_sheet(workbook, "Customer_Requests",
               ["request_id", "synthetic_customer_ref", "request_created_at", "request_status", "owner_resource_id", "owner_persona_id", "data_source_type", "value_stream"], request_rows)
     add_sheet(workbook, "Process_Master",
